@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Carbon\Carbon;
+use App\Traits\HasUuid;
 
 class Peminjaman extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     /**
      * Nama tabel yang digunakan model ini.

@@ -36,9 +36,9 @@ class BukuController extends Controller
         return view('anggota.katalog.index', compact('bukus', 'genres'));
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $buku = Buku::with('genres')->findOrFail($id);
+        $buku = Buku::with('genres')->where('uuid', $id)->firstOrFail();
         return view('anggota.katalog.show', compact('buku'));
     }
 }

@@ -22,13 +22,53 @@ class PeminjamanController extends Controller
         return view('anggota.peminjaman.index', compact('peminjamans'));
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
         $anggota = Auth::guard('anggota')->user();
         $peminjaman = Peminjaman::with(['buku', 'adminPinjam', 'pengembalian.petugasKembali'])
             ->where('id_anggota', $anggota->id_anggota)
-            ->findOrFail($id);
+            ->where('uuid', $id)
+            ->firstOrFail();
 
         return view('anggota.peminjaman.show', compact('peminjaman'));
+    }
+
+    public function store(Request $request, string $id)
+    {
+        $buku = \App\Models\Buku::where('uuid', $id)->firstOrFail();
+        $anggota = Auth::guard('anggota')->user();
+
+        // Check stock
+        if (!$buku->isTersedia()) {
+            return back()->with('error', 'Buku tidak tersedia untuk dipinjam saat ini.');
+        }
+
+        // Check if user already borrowed this book and hasn't returned it
+        $existing = Peminjaman::where('id_anggota', $anggota->id_anggota)
+            ->where('id_buku', $buku->id_buku)
+            ->whereIn('status_peminjaman', ['DIPINJAM', 'MENUNGGU_KONFIRMASI'])
+            ->exists();
+
+        if ($existing) {
+            return back()->with('error', 'Anda masih meminjam atau sedang meminta peminjaman buku ini.');
+        }
+
+        $request->validate([
+            'tanggal_harus_kembali' => 'required|date|after:today',
+        ], [
+            'tanggal_harus_kembali.required' => 'Tanggal kembali wajib diisi.',
+            'tanggal_harus_kembali.after' => 'Tanggal kembali harus lebih dari hari ini.',
+        ]);
+
+        Peminjaman::create([
+            'id_anggota' => $anggota->id_anggota,
+            'id_buku' => $buku->id_buku,
+            'id_admin_pinjam' => null, // Will be set when admin confirms
+            'tanggal_pinjam' => \Carbon\Carbon::now()->toDateString(),
+            'tanggal_harus_kembali' => $request->tanggal_harus_kembali,
+            'status_peminjaman' => 'MENUNGGU_KONFIRMASI',
+        ]);
+
+        return redirect()->route('siswa.peminjaman.index')->with('success', 'Permintaan peminjaman berhasil dikirim. Menunggu konfirmasi admin.');
     }
 }

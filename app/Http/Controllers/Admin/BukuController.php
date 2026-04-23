@@ -129,18 +129,18 @@ class BukuController extends Controller
     /**
      * Tampilkan detail buku.
      */
-    public function show(int $id)
+    public function show(string $id)
     {
-        $buku = Buku::with(['genres', 'peminjaman.anggota'])->findOrFail($id);
+        $buku = Buku::with(['genres', 'peminjaman.anggota'])->where('uuid', $id)->firstOrFail();
         return view('admin.buku.show', compact('buku'));
     }
 
     /**
      * Tampilkan form edit buku.
      */
-    public function edit(int $id)
+    public function edit(string $id)
     {
-        $buku   = Buku::with('genres')->findOrFail($id);
+        $buku   = Buku::with('genres')->where('uuid', $id)->firstOrFail();
         $genres = Genre::orderBy('nama_genre')->get();
         return view('admin.buku.edit', compact('buku', 'genres'));
     }
@@ -148,12 +148,12 @@ class BukuController extends Controller
     /**
      * Update data buku.
      */
-    public function update(Request $request, int $id)
+    public function update(Request $request, string $id)
     {
-        $buku = Buku::findOrFail($id);
+        $buku = Buku::where('uuid', $id)->firstOrFail();
 
         $request->validate([
-            'kode_buku'    => 'required|string|max:50|unique:bukus,kode_buku,' . $id . ',id_buku',
+            'kode_buku'    => 'required|string|max:50|unique:bukus,kode_buku,' . $buku->id_buku . ',id_buku',
             'judul_buku'   => 'required|string|max:255',
             'pengarang'    => 'required|string|max:150',
             'penerbit'     => 'nullable|string|max:150',
@@ -161,7 +161,7 @@ class BukuController extends Controller
             'jenis_buku'   => 'nullable|string|max:50',
             'stok'         => 'required|integer|min:0',
             'kondisi'      => 'required|in:BAIK,RUSAK,HILANG',
-            'gambar_cover' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'gambar_cover_base64' => 'nullable|string',
             'genres'       => 'nullable|array',
             'genres.*'     => 'exists:genres,id_genre',
         ], [
@@ -172,8 +172,6 @@ class BukuController extends Controller
             'stok.required'       => 'Stok wajib diisi.',
             'stok.min'            => 'Stok tidak boleh negatif.',
             'kondisi.required'    => 'Kondisi wajib dipilih.',
-            'gambar_cover.image'  => 'File harus berupa gambar.',
-            'gambar_cover.max'    => 'Ukuran gambar maksimal 2MB.',
         ]);
 
         $dataLama = $buku->toArray();
@@ -187,13 +185,27 @@ class BukuController extends Controller
         $data['status_buku'] = $request->input('stok') > 0 ? 'TERSEDIA' : 'TIDAK_TERSEDIA';
 
         // Upload gambar cover baru
-        if ($request->hasFile('gambar_cover')) {
-            // Hapus gambar lama
-            if ($buku->gambar_cover) {
-                Storage::disk('public')->delete($buku->gambar_cover);
+        if ($request->filled('gambar_cover_base64')) {
+            $base64 = $request->input('gambar_cover_base64');
+            // If base64 contains the data
+            if (str_contains($base64, ';base64,')) {
+                @list($type, $file_data) = explode(';', $base64);
+                @list(, $file_data)      = explode(',', $file_data);
+                
+                $extension = 'jpg';
+                if (str_contains($type, 'png')) $extension = 'png';
+                else if (str_contains($type, 'webp')) $extension = 'webp';
+                
+                $fileName = 'covers/' . \Illuminate\Support\Str::uuid() . '.' . $extension;
+                
+                // Hapus gambar lama
+                if ($buku->gambar_cover) {
+                    Storage::disk('public')->delete($buku->gambar_cover);
+                }
+                
+                Storage::disk('public')->put($fileName, base64_decode($file_data));
+                $data['gambar_cover'] = $fileName;
             }
-            $data['gambar_cover'] = $request->file('gambar_cover')
-                                           ->store('covers', 'public');
         }
 
         $buku->update($data);
@@ -218,9 +230,9 @@ class BukuController extends Controller
     /**
      * Hapus buku.
      */
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $buku = Buku::findOrFail($id);
+        $buku = Buku::where('uuid', $id)->firstOrFail();
 
         // Cek apakah buku masih dipinjam
         $masihDipinjam = $buku->peminjaman()

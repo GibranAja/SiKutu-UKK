@@ -40,9 +40,9 @@ class LogAktivitasController extends Controller
         return view('admin.log-aktivitas.index', compact('logs', 'modulList'));
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $log = LogAktivitas::with('admin')->findOrFail($id);
+        $log = LogAktivitas::with('admin')->where('uuid', $id)->firstOrFail();
         return view('admin.log-aktivitas.show', compact('log'));
     }
 }

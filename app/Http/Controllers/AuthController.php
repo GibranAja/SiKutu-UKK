@@ -27,23 +27,22 @@ class AuthController extends Controller
         $request->validate([
             'username' => 'required|string|max:50',
             'password' => 'required|string|min:6',
-            'role'     => 'required|in:admin,siswa',
         ], [
             'username.required' => 'Username wajib diisi.',
             'password.required' => 'Password wajib diisi.',
             'password.min'      => 'Password minimal 6 karakter.',
-            'role.required'     => 'Pilih role login Anda.',
-            'role.in'           => 'Role tidak valid.',
         ]);
 
         $username = $request->input('username');
         $password = $request->input('password');
-        $role     = $request->input('role');
 
-        if ($role === 'admin') {
+        // Check if admin
+        $admin = Admin::where('username', $username)->first();
+        if ($admin) {
             return $this->loginAdmin($request, $username, $password);
         }
 
+        // Otherwise check anggota
         return $this->loginAnggota($request, $username, $password);
     }
 
@@ -74,7 +73,7 @@ class AuthController extends Controller
 
         return back()->withErrors([
             'login' => 'Username atau password admin salah.',
-        ])->withInput($request->only('username', 'role'));
+        ])->withInput($request->only('username'));
     }
 
     /**
@@ -88,27 +87,27 @@ class AuthController extends Controller
         if (!$anggota) {
             return back()->withErrors([
                 'login' => 'Username atau password salah.',
-            ])->withInput($request->only('username', 'role'));
+            ])->withInput($request->only('username'));
         }
 
         // Cek status anggota sebelum login
         if ($anggota->status_anggota === 'NONAKTIF') {
             return back()->withErrors([
                 'login' => 'Akun Anda telah dinonaktifkan. Hubungi admin perpustakaan.',
-            ])->withInput($request->only('username', 'role'));
+            ])->withInput($request->only('username'));
         }
 
         if ($anggota->status_anggota === 'DIBLOKIR') {
             return back()->withErrors([
                 'login' => 'Akun Anda telah diblokir. Hubungi admin perpustakaan.',
-            ])->withInput($request->only('username', 'role'));
+            ])->withInput($request->only('username'));
         }
 
         // Cek masa berlaku
         if (!$anggota->isMasihBerlaku()) {
             return back()->withErrors([
                 'login' => 'Kartu anggota Anda sudah kedaluwarsa. Hubungi admin untuk perpanjangan.',
-            ])->withInput($request->only('username', 'role'));
+            ])->withInput($request->only('username'));
         }
 
         $credentials = [
@@ -125,7 +124,7 @@ class AuthController extends Controller
 
         return back()->withErrors([
             'login' => 'Username atau password salah.',
-        ])->withInput($request->only('username', 'role'));
+        ])->withInput($request->only('username'));
     }
 
     /**

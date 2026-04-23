@@ -36,17 +36,17 @@ class GenreController extends Controller
         return redirect()->route('admin.genre.index')->with('success', 'Genre berhasil ditambahkan.');
     }
 
-    public function edit(int $id)
+    public function edit(string $id)
     {
-        $genre = Genre::findOrFail($id);
+        $genre = Genre::where('uuid', $id)->firstOrFail();
         return view('admin.genre.edit', compact('genre'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, string $id)
     {
-        $genre = Genre::findOrFail($id);
+        $genre = Genre::where('uuid', $id)->firstOrFail();
         $request->validate([
-            'nama_genre' => 'required|string|max:100|unique:genres,nama_genre,' . $id . ',id_genre',
+            'nama_genre' => 'required|string|max:100|unique:genres,nama_genre,' . $genre->id_genre . ',id_genre',
             'deskripsi'  => 'nullable|string|max:500',
         ]);
         $dataLama = $genre->toArray();
@@ -55,7 +55,7 @@ class GenreController extends Controller
         return redirect()->route('admin.genre.index')->with('success', 'Genre berhasil diperbarui.');
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
         $genre = Genre::withCount('bukus')->findOrFail($id);
         if ($genre->bukus_count > 0) {

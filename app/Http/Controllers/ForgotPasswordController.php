@@ -28,26 +28,28 @@ class ForgotPasswordController extends Controller
     public function requestReset(Request $request)
     {
         $request->validate([
-            'username'  => 'required|string|max:50',
-            'tipe_user' => 'required|in:admin,anggota',
+            'identifier'  => 'required|string|max:100',
         ], [
-            'username.required'  => 'Username wajib diisi.',
-            'tipe_user.required' => 'Pilih tipe user.',
+            'identifier.required'  => 'Username atau email wajib diisi.',
         ]);
 
-        $username = $request->input('username');
-        $tipeUser = $request->input('tipe_user');
+        $identifier = $request->input('identifier');
 
         // Verifikasi user ada
-        if ($tipeUser === 'admin') {
-            $user = Admin::where('username', $username)->first();
-        } else {
-            $user = AnggotaPerpustakaan::where('username', $username)->first();
-        }
+        $admin = Admin::where('username', $identifier)->first();
+        $anggota = AnggotaPerpustakaan::where('username', $identifier)->orWhere('email', $identifier)->first();
 
-        if (!$user) {
+        if ($admin) {
+            $user = $admin;
+            $tipeUser = 'admin';
+            $username = $admin->username;
+        } elseif ($anggota) {
+            $user = $anggota;
+            $tipeUser = 'anggota';
+            $username = $anggota->username;
+        } else {
             return back()->withErrors([
-                'username' => 'Username tidak ditemukan.',
+                'identifier' => 'Akun tidak ditemukan.',
             ])->withInput();
         }
 

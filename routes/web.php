@@ -105,6 +105,7 @@ Route::prefix('siswa')->name('siswa.')->middleware(['auth.anggota', 'cek.status'
     // Katalog Buku (read-only)
     Route::get('/katalog', [AnggotaBukuController::class, 'index'])->name('katalog.index');
     Route::get('/katalog/{id}', [AnggotaBukuController::class, 'show'])->name('katalog.show');
+    Route::post('/katalog/{id}/pinjam', [AnggotaPeminjamanController::class, 'store'])->name('katalog.pinjam');
 
     // Histori Peminjaman (read-only)
     Route::get('/peminjaman', [AnggotaPeminjamanController::class, 'index'])->name('peminjaman.index');
@@ -112,6 +113,7 @@ Route::prefix('siswa')->name('siswa.')->middleware(['auth.anggota', 'cek.status'
 
     // Denda (read-only)
     Route::get('/denda', [AnggotaDendaController::class, 'index'])->name('denda.index');
+    Route::post('/denda/{id}/bayar', [AnggotaDendaController::class, 'bayar'])->name('denda.bayar');
 
     // Profile Siswa
     Route::get('/profile', [AnggotaProfileController::class, 'index'])->name('profile');

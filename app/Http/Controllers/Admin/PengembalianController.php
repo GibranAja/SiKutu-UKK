@@ -97,18 +97,18 @@ class PengembalianController extends Controller
         return redirect()->route('admin.pengembalian.index')->with('success', 'Pengembalian berhasil diproses.' . ($dendaTotal > 0 ? " Denda: Rp " . number_format($dendaTotal, 0, ',', '.') : ''));
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $pengembalian = Pengembalian::with(['peminjaman.anggota', 'peminjaman.buku', 'petugasKembali'])->findOrFail($id);
+        $pengembalian = Pengembalian::with(['peminjaman.anggota', 'peminjaman.buku', 'petugasKembali'])->where('uuid', $id)->firstOrFail();
         return view('admin.pengembalian.show', compact('pengembalian'));
     }
 
     /**
      * Lunaskan denda.
      */
-    public function lunaskanDenda(int $id)
+    public function lunaskanDenda(string $id)
     {
-        $pengembalian = Pengembalian::with('peminjaman.anggota')->findOrFail($id);
+        $pengembalian = Pengembalian::with('peminjaman.anggota')->where('uuid', $id)->firstOrFail();
         if (!$pengembalian->adaDenda()) {
             return back()->with('error', 'Tidak ada denda untuk dilunaskan.');
         }

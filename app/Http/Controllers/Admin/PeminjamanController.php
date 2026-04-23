@@ -96,16 +96,16 @@ class PeminjamanController extends Controller
         return redirect()->route('admin.peminjaman.index')->with('success', 'Peminjaman berhasil dicatat.');
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $peminjaman = Peminjaman::with(['anggota', 'buku', 'adminPinjam', 'pengembalian.petugasKembali'])->findOrFail($id);
+        $peminjaman = Peminjaman::with(['anggota', 'buku', 'adminPinjam', 'pengembalian.petugasKembali'])->where('uuid', $id)->firstOrFail();
         $pengaturan = PengaturanDenda::getAktif();
         return view('admin.peminjaman.show', compact('peminjaman', 'pengaturan'));
     }
 
-    public function edit(int $id)
+    public function edit(string $id)
     {
-        $peminjaman = Peminjaman::findOrFail($id);
+        $peminjaman = Peminjaman::where('uuid', $id)->firstOrFail();
         if ($peminjaman->isDikembalikan()) {
             return back()->with('error', 'Peminjaman yang sudah dikembalikan tidak bisa diedit.');
         }
@@ -117,9 +117,9 @@ class PeminjamanController extends Controller
         return view('admin.peminjaman.edit', compact('peminjaman', 'anggotas', 'bukus'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, string $id)
     {
-        $peminjaman = Peminjaman::findOrFail($id);
+        $peminjaman = Peminjaman::where('uuid', $id)->firstOrFail();
         if ($peminjaman->isDikembalikan()) {
             return back()->with('error', 'Peminjaman yang sudah dikembalikan tidak bisa diedit.');
         }
@@ -137,9 +137,9 @@ class PeminjamanController extends Controller
         return redirect()->route('admin.peminjaman.index')->with('success', 'Peminjaman berhasil diperbarui.');
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $peminjaman = Peminjaman::with('buku')->findOrFail($id);
+        $peminjaman = Peminjaman::with('buku')->where('uuid', $id)->firstOrFail();
         if ($peminjaman->status_peminjaman === 'DIPINJAM') {
             $peminjaman->buku->tambahStok();
         }

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\HasUuid;
 
 class AnggotaPerpustakaan extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
     /**
      * Nama tabel yang digunakan model ini.

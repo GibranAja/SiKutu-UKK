@@ -68,33 +68,32 @@ class AnggotaController extends Controller
         return redirect()->route('admin.anggota.index')->with('success', 'Anggota berhasil ditambahkan.');
     }
 
-    public function show(int $id)
+    public function show(string $id)
     {
-        $anggota = AnggotaPerpustakaan::with(['peminjaman.buku', 'peminjaman.pengembalian', 'adminPendaftar'])->findOrFail($id);
+        $anggota = AnggotaPerpustakaan::with(['peminjaman.buku', 'peminjaman.pengembalian', 'adminPendaftar'])->where('uuid', $id)->firstOrFail();
         return view('admin.anggota.show', compact('anggota'));
     }
 
-    public function edit(int $id)
+    public function edit(string $id)
     {
-        $anggota = AnggotaPerpustakaan::findOrFail($id);
+        $anggota = AnggotaPerpustakaan::where('uuid', $id)->firstOrFail();
         $jurusanList = AnggotaPerpustakaan::getAllJurusan();
         return view('admin.anggota.edit', compact('anggota', 'jurusanList'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, string $id)
     {
-        $anggota = AnggotaPerpustakaan::findOrFail($id);
+        $anggota = AnggotaPerpustakaan::where('uuid', $id)->firstOrFail();
         $jurusanValid = AnggotaPerpustakaan::getAllJurusan();
-
         $request->validate([
-            'username'       => 'required|string|max:50|unique:anggota_perpustakaan,username,' . $id . ',id_anggota|alpha_dash',
+            'username'       => 'required|string|max:50|unique:anggota_perpustakaan,username,' . $anggota->id_anggota . ',id_anggota|alpha_dash',
             'nama_lengkap'   => 'required|string|max:100',
-            'nis'            => 'required|string|max:20|unique:anggota_perpustakaan,nis,' . $id . ',id_anggota',
+            'nis'            => 'required|string|max:20|unique:anggota_perpustakaan,nis,' . $anggota->id_anggota . ',id_anggota',
             'kelas'          => 'required|in:10,11,12',
             'jurusan'        => 'required|in:' . implode(',', $jurusanValid),
             'alamat'         => 'nullable|string|max:500',
             'no_telepon'     => 'nullable|string|max:20',
-            'email'          => 'nullable|email|max:100|unique:anggota_perpustakaan,email,' . $id . ',id_anggota',
+            'email'          => 'nullable|email|max:100|unique:anggota_perpustakaan,email,' . $anggota->id_anggota . ',id_anggota',
             'status_anggota' => 'required|in:AKTIF,NONAKTIF,DIBLOKIR',
             'masa_berlaku'   => 'required|date',
         ]);
@@ -108,9 +107,9 @@ class AnggotaController extends Controller
         return redirect()->route('admin.anggota.index')->with('success', 'Anggota berhasil diperbarui.');
     }
 
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
-        $anggota = AnggotaPerpustakaan::findOrFail($id);
+        $anggota = AnggotaPerpustakaan::where('uuid', $id)->firstOrFail();
         $masihPinjam = $anggota->peminjaman()->where('status_peminjaman', 'DIPINJAM')->exists();
         if ($masihPinjam) {
             return back()->with('error', 'Anggota tidak bisa dihapus karena masih ada peminjaman aktif.');
@@ -124,9 +123,9 @@ class AnggotaController extends Controller
     /**
      * Toggle status anggota (AKTIF <-> NONAKTIF).
      */
-    public function toggleStatus(int $id)
+    public function toggleStatus(string $id)
     {
-        $anggota = AnggotaPerpustakaan::findOrFail($id);
+        $anggota = AnggotaPerpustakaan::where('uuid', $id)->firstOrFail();
         $statusLama = $anggota->status_anggota;
         $anggota->status_anggota = $statusLama === 'AKTIF' ? 'NONAKTIF' : 'AKTIF';
         $anggota->save();
@@ -139,9 +138,9 @@ class AnggotaController extends Controller
     /**
      * Reset password anggota oleh admin.
      */
-    public function resetPassword(Request $request, int $id)
+    public function resetPassword(Request $request, string $id)
     {
-        $anggota = AnggotaPerpustakaan::findOrFail($id);
+        $anggota = AnggotaPerpustakaan::where('uuid', $id)->firstOrFail();
 
         $request->validate([
             'new_password' => 'required|string|min:6|confirmed',
