@@ -4,8 +4,12 @@
 @section('header', 'Manajemen Buku')
 
 @section('content')
-<div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <form action="{{ route('admin.buku.index') }}" method="GET" class="w-full sm:w-auto flex-1 flex flex-col sm:flex-row gap-2">
+@section('content')
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<div x-data="bukuManager()" class="space-y-4">
+    <div class="mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <form action="{{ route('admin.buku.index') }}" method="GET" class="w-full sm:w-auto flex-1 flex flex-col sm:flex-row gap-2">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul, pengarang, kode..." class="input-field w-full sm:max-w-xs">
 
         <div class="w-full sm:max-w-[150px]">
@@ -22,11 +26,31 @@
         @endif
     </form>
 
-    <a href="{{ route('admin.buku.create') }}" class="btn-primary whitespace-nowrap flex items-center">
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-        Tambah Buku
-    </a>
-</div>
+        <div class="flex gap-2">
+            <button type="button" @click="$refs.fileImport.click()" class="btn-secondary whitespace-nowrap flex items-center bg-teal-600 hover:bg-teal-700 text-white border-none">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Import
+            </button>
+            <input type="file" x-ref="fileImport" @change="handleImport" accept=".xlsx" class="hidden">
+            
+            <div class="relative" x-data="{ openExport: false }">
+                <button type="button" @click="openExport = !openExport" class="btn-secondary whitespace-nowrap flex items-center bg-gray-600 hover:bg-gray-700 text-white border-none">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export
+                </button>
+                <div x-show="openExport" @click.away="openExport = false" class="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg border border-gray-200 z-10" x-cloak>
+                    <button type="button" @click="exportExcel(); openExport = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Excel (.xlsx)</button>
+                    <button type="button" @click="exportCSV(); openExport = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">CSV (.csv)</button>
+                    <button type="button" @click="exportPDF(); openExport = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">PDF / Print</button>
+                </div>
+            </div>
+
+            <a href="{{ route('admin.buku.create') }}" class="btn-primary whitespace-nowrap flex items-center">
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                Tambah
+            </a>
+        </div>
+    </div>
 
 <div class="card p-0 overflow-hidden">
     <div class="overflow-x-auto">
@@ -105,4 +129,124 @@
     </div>
     @endif
 </div>
+</div>
+
+<script>
+function bukuManager() {
+    return {
+        async getAllBuku() {
+            try {
+                const response = await fetch('{{ route("admin.buku.get-all") }}');
+                return await response.json();
+            } catch (err) {
+                alert('Gagal mengambil data buku.');
+                return [];
+            }
+        },
+        
+        formatDataForExport(data) {
+            return data.map(b => ({
+                'Kode Buku': b.kode_buku,
+                'Judul Buku': b.judul_buku,
+                'Pengarang': b.pengarang,
+                'Penerbit': b.penerbit || '-',
+                'Tahun Terbit': b.tahun_terbit || '-',
+                'Stok': b.stok,
+                'Kondisi': b.kondisi,
+                'Status': b.status_buku,
+                'Genre': b.genres ? b.genres.map(g => g.nama_genre).join(', ') : '-'
+            }));
+        },
+
+        async exportExcel() {
+            const data = await this.getAllBuku();
+            if(!data.length) return alert('Tidak ada data.');
+            const ws = XLSX.utils.json_to_sheet(this.formatDataForExport(data));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Data Buku");
+            XLSX.writeFile(wb, "Data_Buku_Sikutu.xlsx");
+        },
+
+        async exportCSV() {
+            const data = await this.getAllBuku();
+            if(!data.length) return alert('Tidak ada data.');
+            const ws = XLSX.utils.json_to_sheet(this.formatDataForExport(data));
+            const csv = XLSX.utils.sheet_to_csv(ws);
+            const blob = new Blob(["\uFEFF"+csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Data_Buku_Sikutu.csv";
+            link.click();
+        },
+
+        async exportPDF() {
+            const data = await this.getAllBuku();
+            if(!data.length) return alert('Tidak ada data.');
+            let html = '<table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse:collapse; font-family:sans-serif; font-size:12px;">';
+            html += '<tr><th>Kode</th><th>Judul</th><th>Pengarang</th><th>Penerbit</th><th>Tahun</th><th>Stok</th><th>Kondisi</th></tr>';
+            data.forEach(b => {
+                html += `<tr><td>${b.kode_buku}</td><td>${b.judul_buku}</td><td>${b.pengarang}</td><td>${b.penerbit||'-'}</td><td>${b.tahun_terbit||'-'}</td><td>${b.stok}</td><td>${b.kondisi}</td></tr>`;
+            });
+            html += '</table>';
+            
+            const printWin = window.open('', '_blank');
+            printWin.document.write('<html><head><title>Cetak PDF Data Buku</title></head><body>');
+            printWin.document.write('<h2>Data Buku Sikutu</h2>');
+            printWin.document.write(html);
+            printWin.document.write('</body></html>');
+            printWin.document.close();
+            setTimeout(() => { printWin.print(); }, 500);
+        },
+
+        handleImport(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                const data = evt.target.result;
+                const wb = XLSX.read(data, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const json = XLSX.utils.sheet_to_json(ws);
+                
+                if(!json.length) return alert('File kosong atau format salah!');
+                
+                // Mapping expected keys
+                const payload = json.map(row => ({
+                    kode_buku: row['Kode Buku'] || row['kode_buku'] || '',
+                    judul_buku: row['Judul Buku'] || row['judul_buku'] || '',
+                    pengarang: row['Pengarang'] || row['pengarang'] || '',
+                    penerbit: row['Penerbit'] || row['penerbit'] || '',
+                    tahun_terbit: row['Tahun Terbit'] || row['tahun_terbit'] || '',
+                    jenis_buku: row['Jenis Buku'] || row['jenis_buku'] || '',
+                    stok: parseInt(row['Stok'] || row['stok'] || 0),
+                    kondisi: row['Kondisi'] || row['kondisi'] || 'BAIK'
+                })).filter(b => b.kode_buku && b.judul_buku && b.pengarang);
+                
+                if(!payload.length) return alert('Format Excel tidak sesuai. Pastikan ada kolom Kode Buku, Judul Buku, dan Pengarang.');
+                
+                try {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+                    const res = await fetch('{{ route("admin.buku.import-json") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                        body: JSON.stringify({ books: payload })
+                    });
+                    const result = await res.json();
+                    if(result.success) {
+                        alert(result.message);
+                        window.location.reload();
+                    } else {
+                        alert('Gagal mengimpor: ' + (result.message || 'Error validasi'));
+                    }
+                } catch(err) {
+                    alert('Terjadi kesalahan saat mengimpor.');
+                }
+                this.$refs.fileImport.value = '';
+            };
+            reader.readAsBinaryString(file);
+        }
+    }
+}
+</script>
 @endsection

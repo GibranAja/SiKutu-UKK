@@ -48,7 +48,7 @@
                         <div class="font-medium text-gray-800">{{ $anggota->nama_lengkap }}</div>
                         <div class="text-xs text-gray-500">{{ $anggota->username }}</div>
                     </td>
-                    <td class="px-6 py-4">{{ $anggota->kelas }} - {{ $anggota->jurusan }}</td>
+                    <td class="px-6 py-4">{{ $anggota->jurusan }}</td>
                     <td class="px-6 py-4">
                         <form action="{{ route('admin.anggota.toggle-status', $anggota->uuid) }}" method="POST" class="inline">
                             @csrf

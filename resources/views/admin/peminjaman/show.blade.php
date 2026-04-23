@@ -89,7 +89,7 @@
             <div>
                 <h4 class="text-xs text-gray-500 font-semibold uppercase mb-1">Peminjam</h4>
                 <p class="font-oswald text-lg font-medium text-gray-800">{{ $peminjaman->anggota->nama_lengkap ?? 'Anggota Dihapus' }}</p>
-                <p class="text-sm text-gray-500">NIS: {{ $peminjaman->anggota->nis ?? '-' }} | Kelas: {{ $peminjaman->anggota->kelas ?? '-' }} {{ $peminjaman->anggota->jurusan ?? '-' }}</p>
+                <p class="text-sm text-gray-500">NIS: {{ $peminjaman->anggota->nis ?? '-' }} | Kelas: {{ $peminjaman->anggota->jurusan ?? '-' }}</p>
             </div>
         </div>
 

@@ -59,9 +59,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth.admin')->group(function
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // CRUD Buku
+    Route::get('/buku/get-all', [AdminBukuController::class, 'getAll'])->name('buku.get-all');
+    Route::post('/buku/import-json', [AdminBukuController::class, 'importJson'])->name('buku.import-json');
     Route::resource('buku', AdminBukuController::class)->parameters(['buku' => 'uuid']);
 
     // CRUD Genre
+    Route::get('/genre/get-all', [AdminGenreController::class, 'getAll'])->name('genre.get-all');
+    Route::post('/genre/import-json', [AdminGenreController::class, 'importJson'])->name('genre.import-json');
     Route::resource('genre', AdminGenreController::class)->parameters(['genre' => 'id'])->except(['show']);
 
     // CRUD Anggota
@@ -91,6 +95,13 @@ Route::prefix('admin')->name('admin.')->middleware('auth.admin')->group(function
     // Log Aktivitas
     Route::get('/log-aktivitas', [LogAktivitasController::class, 'index'])->name('log-aktivitas.index');
     Route::get('/log-aktivitas/{id}', [LogAktivitasController::class, 'show'])->name('log-aktivitas.show');
+
+    // Recycle Bin
+    Route::get('/recycle-bin', [\App\Http\Controllers\Admin\RecycleBinController::class, 'index'])->name('recycle-bin.index');
+    Route::post('/recycle-bin/buku/{id}/restore', [\App\Http\Controllers\Admin\RecycleBinController::class, 'restoreBuku'])->name('recycle-bin.restore.buku');
+    Route::delete('/recycle-bin/buku/{id}/force-delete', [\App\Http\Controllers\Admin\RecycleBinController::class, 'forceDeleteBuku'])->name('recycle-bin.force-delete.buku');
+    Route::post('/recycle-bin/genre/{id}/restore', [\App\Http\Controllers\Admin\RecycleBinController::class, 'restoreGenre'])->name('recycle-bin.restore.genre');
+    Route::delete('/recycle-bin/genre/{id}/force-delete', [\App\Http\Controllers\Admin\RecycleBinController::class, 'forceDeleteGenre'])->name('recycle-bin.force-delete.genre');
 
     // Profile Admin
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');

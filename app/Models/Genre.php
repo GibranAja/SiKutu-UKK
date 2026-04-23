@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Genre extends Model
 {
-    use HasFactory, HasUuid;
+    use HasFactory, HasUuid, SoftDeletes;
 
     /**
      * Nama tabel yang digunakan model ini.

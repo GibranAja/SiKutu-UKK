@@ -66,4 +66,30 @@ class GenreController extends Controller
         LogAktivitas::catat(Auth::guard('admin')->id(), 'DELETE_GENRE', 'genre', "Menghapus genre: {$dataLama['nama_genre']}", $dataLama, null);
         return redirect()->route('admin.genre.index')->with('success', 'Genre berhasil dihapus.');
     }
+
+    public function getAll()
+    {
+        return response()->json(Genre::withCount('bukus')->orderBy('nama_genre')->get());
+    }
+
+    public function importJson(Request $request)
+    {
+        $data = $request->validate([
+            'genres' => 'required|array',
+            'genres.*.nama_genre' => 'required|string',
+        ]);
+
+        $imported = 0;
+        foreach ($data['genres'] as $row) {
+            Genre::updateOrCreate(
+                ['nama_genre' => $row['nama_genre']],
+                ['deskripsi' => $row['deskripsi'] ?? null]
+            );
+            $imported++;
+        }
+
+        LogAktivitas::catat(Auth::guard('admin')->id(), 'IMPORT_GENRE', 'genre', "Mengimpor $imported genre via Excel.");
+
+        return response()->json(['success' => true, 'message' => "$imported genre berhasil diimpor!"]);
+    }
 }

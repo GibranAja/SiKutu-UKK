@@ -16,7 +16,7 @@
             <p class="text-gray-500 text-sm mb-4">{{ Auth::guard('anggota')->user()->nis }}</p>
             
             <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 uppercase tracking-wider mb-6">
-                Siswa Kelas {{ Auth::guard('anggota')->user()->kelas }} {{ Auth::guard('anggota')->user()->jurusan }}
+                Siswa Kelas {{ Auth::guard('anggota')->user()->jurusan }}
             </span>
             
             <div class="w-full text-left space-y-3 pt-4 border-t border-gray-100">

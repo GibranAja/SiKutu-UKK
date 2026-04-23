@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Buku extends Model
 {
-    use HasFactory, HasUuid;
+    use HasFactory, HasUuid, SoftDeletes;
 
     /**
      * Nama tabel yang digunakan model ini.

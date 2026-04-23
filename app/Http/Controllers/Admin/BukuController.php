@@ -277,4 +277,48 @@ class BukuController extends Controller
         return redirect()->route('admin.buku.index')
                          ->with('success', 'Buku berhasil dihapus.');
     }
+
+    /**
+     * Mengambil semua buku untuk export
+     */
+    public function getAll()
+    {
+        return response()->json(Buku::with('genres')->orderBy('created_at', 'desc')->get());
+    }
+
+    /**
+     * Import buku dari JSON hasil parsing XLSX
+     */
+    public function importJson(Request $request)
+    {
+        $data = $request->validate([
+            'books' => 'required|array',
+            'books.*.kode_buku' => 'required|string',
+            'books.*.judul_buku' => 'required|string',
+            'books.*.pengarang' => 'required|string',
+            'books.*.stok' => 'required|numeric',
+        ]);
+
+        $imported = 0;
+        foreach ($data['books'] as $row) {
+            Buku::updateOrCreate(
+                ['kode_buku' => $row['kode_buku']],
+                [
+                    'judul_buku' => $row['judul_buku'],
+                    'pengarang' => $row['pengarang'],
+                    'penerbit' => $row['penerbit'] ?? null,
+                    'tahun_terbit' => $row['tahun_terbit'] ?? null,
+                    'jenis_buku' => $row['jenis_buku'] ?? null,
+                    'stok' => (int) $row['stok'],
+                    'kondisi' => $row['kondisi'] ?? 'BAIK',
+                    'status_buku' => ((int) $row['stok']) > 0 ? 'TERSEDIA' : 'TIDAK_TERSEDIA',
+                ]
+            );
+            $imported++;
+        }
+
+        LogAktivitas::catat(Auth::guard('admin')->id(), 'IMPORT_BUKU', 'buku', "Mengimpor $imported buku via Excel.");
+
+        return response()->json(['success' => true, 'message' => "$imported buku berhasil diimpor!"]);
+    }
 }

@@ -36,7 +36,7 @@
             <div class="w-full mt-6 space-y-3 text-sm text-left">
                 <div class="flex justify-between border-b border-gray-100 pb-2">
                     <span class="text-gray-500">Kelas / Jurusan</span>
-                    <span class="font-medium text-gray-800">{{ $anggota->kelas }} {{ $anggota->jurusan }}</span>
+                    <span class="font-medium text-gray-800">{{ $anggota->jurusan }}</span>
                 </div>
                 <div class="flex justify-between border-b border-gray-100 pb-2">
                     <span class="text-gray-500">Username</span>
