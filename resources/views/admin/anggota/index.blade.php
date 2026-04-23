@@ -7,11 +7,11 @@
 <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <form action="{{ route('admin.anggota.index') }}" method="GET" class="w-full sm:w-auto flex-1 flex flex-col sm:flex-row gap-2">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, NIS, username..." class="input-field w-full sm:max-w-xs">
-        
+
         <div class="w-full sm:max-w-[150px]">
             <x-custom-select name="status" :options="['' => 'Semua Status', 'AKTIF' => 'Aktif', 'NONAKTIF' => 'Nonaktif', 'DIBLOKIR' => 'Diblokir']" selected="{{ request('status') }}" placeholder="Semua Status" />
         </div>
-        
+
         <div class="w-full sm:max-w-[150px]">
             <x-custom-select name="kelas" :options="['' => 'Semua Kelas', '10' => 'Kelas 10', '11' => 'Kelas 11', '12' => 'Kelas 12']" selected="{{ request('kelas') }}" placeholder="Semua Kelas" />
         </div>
@@ -21,11 +21,6 @@
             <a href="{{ route('admin.anggota.index') }}" class="btn-danger whitespace-nowrap bg-gray-500 hover:bg-gray-600 border-none ring-0">Reset</a>
         @endif
     </form>
-
-    <a href="{{ route('admin.anggota.create') }}" class="btn-primary whitespace-nowrap flex items-center">
-        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-        Tambah Anggota
-    </a>
 </div>
 
 <div class="card p-0 overflow-hidden">
@@ -53,7 +48,7 @@
                         <form action="{{ route('admin.anggota.toggle-status', $anggota->uuid) }}" method="POST" class="inline">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="px-2 py-1 text-xs font-semibold rounded-full transition-colors 
+                            <button type="submit" class="px-2 py-1 text-xs font-semibold rounded-full transition-colors
                                 @if($anggota->status_anggota == 'AKTIF') bg-emerald-100 text-emerald-800 hover:bg-emerald-200
                                 @elseif($anggota->status_anggota == 'NONAKTIF') bg-gray-100 text-gray-800 hover:bg-gray-200
                                 @else bg-red-100 text-red-800 hover:bg-red-200 @endif" title="Klik untuk mengubah status">
