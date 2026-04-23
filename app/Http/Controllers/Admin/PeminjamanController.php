@@ -140,7 +140,7 @@ class PeminjamanController extends Controller
     public function destroy(string $uuid)
     {
         $peminjaman = Peminjaman::with('buku')->where('uuid', $uuid)->firstOrFail();
-        if ($peminjaman->status_peminjaman === 'DIPINJAM') {
+        if (in_array($peminjaman->status_peminjaman, ['DIPINJAM', 'MENUNGGU_KONFIRMASI'])) {
             $peminjaman->buku->tambahStok();
         }
         $dataLama = $peminjaman->toArray();
@@ -160,11 +160,6 @@ class PeminjamanController extends Controller
             return back()->with('error', 'Peminjaman ini tidak dapat diterima.');
         }
 
-        // Cek apakah buku masih tersedia
-        if (!$peminjaman->buku->isTersedia()) {
-            return back()->with('error', 'Buku tidak tersedia untuk dipinjam.');
-        }
-
         $dataLama = $peminjaman->toArray();
 
         // Update status
@@ -172,9 +167,6 @@ class PeminjamanController extends Controller
             'status_peminjaman' => 'DIPINJAM',
             'id_admin_pinjam' => Auth::guard('admin')->id(),
         ]);
-
-        // Kurangi stok buku
-        $peminjaman->buku->kurangiStok();
 
         LogAktivitas::catat(
             Auth::guard('admin')->id(),
@@ -203,6 +195,9 @@ class PeminjamanController extends Controller
         $peminjaman->update([
             'status_peminjaman' => 'DITOLAK',
         ]);
+
+        // Kembalikan stok buku
+        $peminjaman->buku->tambahStok();
 
         LogAktivitas::catat(
             Auth::guard('admin')->id(),

@@ -77,6 +77,8 @@ class PeminjamanController extends Controller
             'status_peminjaman' => 'MENUNGGU_KONFIRMASI',
         ]);
 
+        $buku->kurangiStok();
+
         return redirect()->route('siswa.peminjaman.index')->with('success', 'Permintaan peminjaman berhasil dikirim. Menunggu konfirmasi admin.');
     }
 }
