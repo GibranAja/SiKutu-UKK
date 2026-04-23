@@ -15,7 +15,9 @@ class PengembalianController extends Controller
 {
     public function index(Request $request)
     {
+        $tab = $request->input('tab', 'pengembalian');
         $query = Pengembalian::with(['peminjaman.anggota', 'peminjaman.buku', 'petugasKembali']);
+        
         if ($request->filled('search')) {
             $s = $request->input('search');
             $query->whereHas('peminjaman', function ($q) use ($s) {
@@ -23,11 +25,18 @@ class PengembalianController extends Controller
                   ->orWhereHas('buku', fn($q2) => $q2->where('judul_buku', 'like', "%{$s}%"));
             });
         }
-        if ($request->filled('status_denda')) {
-            $query->where('status_denda', $request->input('status_denda'));
+
+        if ($tab == 'denda') {
+            $query->where('denda_total', '>', 0);
+            if ($request->filled('status_denda')) {
+                $query->where('status_denda', $request->input('status_denda'));
+            }
+        } else {
+            $query->where('denda_total', 0);
         }
+
         $pengembalians = $query->orderBy('created_at', 'desc')->paginate(15);
-        return view('admin.pengembalian.index', compact('pengembalians'));
+        return view('admin.pengembalian.index', compact('pengembalians', 'tab'));
     }
 
     public function create(Request $request)
@@ -104,22 +113,36 @@ class PengembalianController extends Controller
     }
 
     /**
-     * Lunaskan denda.
+     * Terima pembayaran denda.
      */
-    public function lunaskanDenda(string $id)
+    public function terimaPembayaran(string $id)
     {
         $pengembalian = Pengembalian::with('peminjaman.anggota')->where('uuid', $id)->firstOrFail();
-        if (!$pengembalian->adaDenda()) {
-            return back()->with('error', 'Tidak ada denda untuk dilunaskan.');
-        }
-        if ($pengembalian->isDendaLunas()) {
-            return back()->with('error', 'Denda sudah lunas.');
+        if ($pengembalian->status_denda !== 'MENUNGGU_KONFIRMASI') {
+            return back()->with('error', 'Status pembayaran tidak valid atau bukan menunggu konfirmasi.');
         }
 
-        $pengembalian->lunaskanDenda();
+        $pengembalian->update(['status_denda' => 'LUNAS']);
 
-        LogAktivitas::catat(Auth::guard('admin')->id(), 'LUNASKAN_DENDA', 'pengembalian', "Melunaskan denda Rp " . number_format($pengembalian->denda_total, 0, ',', '.') . " untuk anggota {$pengembalian->peminjaman->anggota->nama_lengkap}");
+        LogAktivitas::catat(Auth::guard('admin')->id(), 'TERIMA_PEMBAYARAN_DENDA', 'pengembalian', "Menerima pembayaran denda Rp " . number_format($pengembalian->denda_total, 0, ',', '.') . " untuk anggota {$pengembalian->peminjaman->anggota->nama_lengkap}");
 
-        return back()->with('success', 'Denda berhasil dilunaskan.');
+        return back()->with('success', 'Pembayaran denda berhasil diterima dan denda telah dilunaskan.');
+    }
+
+    /**
+     * Tolak pembayaran denda.
+     */
+    public function tolakPembayaran(string $id)
+    {
+        $pengembalian = Pengembalian::with('peminjaman.anggota')->where('uuid', $id)->firstOrFail();
+        if ($pengembalian->status_denda !== 'MENUNGGU_KONFIRMASI') {
+            return back()->with('error', 'Status pembayaran tidak valid atau bukan menunggu konfirmasi.');
+        }
+
+        $pengembalian->update(['status_denda' => 'DITOLAK']);
+
+        LogAktivitas::catat(Auth::guard('admin')->id(), 'TOLAK_PEMBAYARAN_DENDA', 'pengembalian', "Menolak pembayaran denda Rp " . number_format($pengembalian->denda_total, 0, ',', '.') . " untuk anggota {$pengembalian->peminjaman->anggota->nama_lengkap}");
+
+        return back()->with('success', 'Pembayaran denda ditolak.');
     }
 }

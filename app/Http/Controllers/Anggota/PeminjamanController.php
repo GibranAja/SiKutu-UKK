@@ -14,6 +14,14 @@ class PeminjamanController extends Controller
         $anggota = Auth::guard('anggota')->user();
         $query = Peminjaman::with(['buku', 'pengembalian'])->where('id_anggota', $anggota->id_anggota);
 
+        if ($request->filled('search')) {
+            $s = $request->input('search');
+            $query->whereHas('buku', function ($q) use ($s) {
+                $q->where('judul_buku', 'like', "%{$s}%")
+                  ->orWhere('pengarang', 'like', "%{$s}%");
+            });
+        }
+
         if ($request->filled('status')) {
             $query->where('status_peminjaman', $request->input('status'));
         }

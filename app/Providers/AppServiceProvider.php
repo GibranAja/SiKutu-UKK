@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        try {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE pengembalians MODIFY COLUMN status_denda ENUM('LUNAS', 'BELUM_LUNAS', 'TIDAK_ADA', 'MENUNGGU_KONFIRMASI', 'DITOLAK') DEFAULT 'TIDAK_ADA'");
+        } catch (\Exception $e) {
+            // Abaikan jika sudah terubah atau jika tabel belum ada
+        }
     }
 }

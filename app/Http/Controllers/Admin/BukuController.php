@@ -76,7 +76,7 @@ class BukuController extends Controller
             'jenis_buku'   => 'nullable|string|max:50',
             'stok'         => 'required|integer|min:0',
             'kondisi'      => 'required|in:BAIK,RUSAK,HILANG',
-            'gambar_cover' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'gambar_cover_base64' => 'nullable|string',
             'genres'       => 'nullable|array',
             'genres.*'     => 'exists:genres,id_genre',
         ], [
@@ -87,8 +87,6 @@ class BukuController extends Controller
             'stok.required'       => 'Stok wajib diisi.',
             'stok.min'            => 'Stok tidak boleh negatif.',
             'kondisi.required'    => 'Kondisi wajib dipilih.',
-            'gambar_cover.image'  => 'File harus berupa gambar.',
-            'gambar_cover.max'    => 'Ukuran gambar maksimal 2MB.',
         ]);
 
         $data = $request->only([
@@ -100,9 +98,20 @@ class BukuController extends Controller
         $data['status_buku'] = $request->input('stok') > 0 ? 'TERSEDIA' : 'TIDAK_TERSEDIA';
 
         // Upload gambar cover
-        if ($request->hasFile('gambar_cover')) {
-            $data['gambar_cover'] = $request->file('gambar_cover')
-                                           ->store('covers', 'public');
+        if ($request->filled('gambar_cover_base64')) {
+            $base64 = $request->input('gambar_cover_base64');
+            if (str_contains($base64, ';base64,')) {
+                @list($type, $file_data) = explode(';', $base64);
+                @list(, $file_data)      = explode(',', $file_data);
+
+                $extension = 'jpg';
+                if (str_contains($type, 'png')) $extension = 'png';
+                else if (str_contains($type, 'webp')) $extension = 'webp';
+
+                $fileName = 'covers/' . \Illuminate\Support\Str::uuid() . '.' . $extension;
+                Storage::disk('public')->put($fileName, base64_decode($file_data));
+                $data['gambar_cover'] = $fileName;
+            }
         }
 
         $buku = Buku::create($data);
@@ -129,18 +138,18 @@ class BukuController extends Controller
     /**
      * Tampilkan detail buku.
      */
-    public function show(string $id)
+    public function show(string $uuid)
     {
-        $buku = Buku::with(['genres', 'peminjaman.anggota'])->where('uuid', $id)->firstOrFail();
+        $buku = Buku::with(['genres', 'peminjaman.anggota'])->where('uuid', $uuid)->firstOrFail();
         return view('admin.buku.show', compact('buku'));
     }
 
     /**
      * Tampilkan form edit buku.
      */
-    public function edit(string $id)
+    public function edit(string $uuid)
     {
-        $buku   = Buku::with('genres')->where('uuid', $id)->firstOrFail();
+        $buku   = Buku::with('genres')->where('uuid', $uuid)->firstOrFail();
         $genres = Genre::orderBy('nama_genre')->get();
         return view('admin.buku.edit', compact('buku', 'genres'));
     }
@@ -148,9 +157,9 @@ class BukuController extends Controller
     /**
      * Update data buku.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $uuid)
     {
-        $buku = Buku::where('uuid', $id)->firstOrFail();
+        $buku = Buku::where('uuid', $uuid)->firstOrFail();
 
         $request->validate([
             'kode_buku'    => 'required|string|max:50|unique:bukus,kode_buku,' . $buku->id_buku . ',id_buku',
@@ -191,18 +200,18 @@ class BukuController extends Controller
             if (str_contains($base64, ';base64,')) {
                 @list($type, $file_data) = explode(';', $base64);
                 @list(, $file_data)      = explode(',', $file_data);
-                
+
                 $extension = 'jpg';
                 if (str_contains($type, 'png')) $extension = 'png';
                 else if (str_contains($type, 'webp')) $extension = 'webp';
-                
+
                 $fileName = 'covers/' . \Illuminate\Support\Str::uuid() . '.' . $extension;
-                
+
                 // Hapus gambar lama
                 if ($buku->gambar_cover) {
                     Storage::disk('public')->delete($buku->gambar_cover);
                 }
-                
+
                 Storage::disk('public')->put($fileName, base64_decode($file_data));
                 $data['gambar_cover'] = $fileName;
             }
@@ -230,9 +239,9 @@ class BukuController extends Controller
     /**
      * Hapus buku.
      */
-    public function destroy(string $id)
+    public function destroy(string $uuid)
     {
-        $buku = Buku::where('uuid', $id)->firstOrFail();
+        $buku = Buku::where('uuid', $uuid)->firstOrFail();
 
         // Cek apakah buku masih dipinjam
         $masihDipinjam = $buku->peminjaman()

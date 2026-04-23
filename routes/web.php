@@ -59,7 +59,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth.admin')->group(function
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // CRUD Buku
-    Route::resource('buku', AdminBukuController::class)->parameters(['buku' => 'id']);
+    Route::resource('buku', AdminBukuController::class)->parameters(['buku' => 'uuid']);
 
     // CRUD Genre
     Route::resource('genre', AdminGenreController::class)->parameters(['genre' => 'id'])->except(['show']);
@@ -70,14 +70,19 @@ Route::prefix('admin')->name('admin.')->middleware('auth.admin')->group(function
     Route::post('/anggota/{id}/reset-password', [AdminAnggotaController::class, 'resetPassword'])->name('anggota.reset-password');
 
     // CRUD Peminjaman
-    Route::resource('peminjaman', AdminPeminjamanController::class)->parameters(['peminjaman' => 'id']);
+    Route::resource('peminjaman', AdminPeminjamanController::class)->parameters(['peminjaman' => 'uuid']);
+    Route::post('/peminjaman/{uuid}/terima', [AdminPeminjamanController::class, 'terima'])->name('peminjaman.terima');
+    Route::post('/peminjaman/{uuid}/tolak', [AdminPeminjamanController::class, 'tolak'])->name('peminjaman.tolak');
 
     // Pengembalian
     Route::get('/pengembalian', [AdminPengembalianController::class, 'index'])->name('pengembalian.index');
     Route::get('/pengembalian/create', [AdminPengembalianController::class, 'create'])->name('pengembalian.create');
     Route::post('/pengembalian', [AdminPengembalianController::class, 'store'])->name('pengembalian.store');
     Route::get('/pengembalian/{id}', [AdminPengembalianController::class, 'show'])->name('pengembalian.show');
-    Route::patch('/pengembalian/{id}/lunaskan', [AdminPengembalianController::class, 'lunaskanDenda'])->name('pengembalian.lunaskan');
+    Route::patch('/pengembalian/{id}/terima-pembayaran', [AdminPengembalianController::class, 'terimaPembayaran'])->name('pengembalian.terima-pembayaran');
+    Route::patch('/pengembalian/{id}/tolak-pembayaran', [AdminPengembalianController::class, 'tolakPembayaran'])->name('pengembalian.tolak-pembayaran');
+    Route::get('/pengembalian/{id}/terima-pembayaran', fn() => redirect()->route('admin.pengembalian.index', ['tab' => 'denda']));
+    Route::get('/pengembalian/{id}/tolak-pembayaran', fn() => redirect()->route('admin.pengembalian.index', ['tab' => 'denda']));
 
     // Pengaturan Denda
     Route::get('/denda/setting', [AdminDendaController::class, 'index'])->name('denda.index');
@@ -104,12 +109,12 @@ Route::prefix('siswa')->name('siswa.')->middleware(['auth.anggota', 'cek.status'
 
     // Katalog Buku (read-only)
     Route::get('/katalog', [AnggotaBukuController::class, 'index'])->name('katalog.index');
-    Route::get('/katalog/{id}', [AnggotaBukuController::class, 'show'])->name('katalog.show');
-    Route::post('/katalog/{id}/pinjam', [AnggotaPeminjamanController::class, 'store'])->name('katalog.pinjam');
+    Route::get('/katalog/{uuid}', [AnggotaBukuController::class, 'show'])->name('katalog.show');
+    Route::post('/katalog/{uuid}/pinjam', [AnggotaPeminjamanController::class, 'store'])->name('katalog.pinjam');
 
     // Histori Peminjaman (read-only)
     Route::get('/peminjaman', [AnggotaPeminjamanController::class, 'index'])->name('peminjaman.index');
-    Route::get('/peminjaman/{id}', [AnggotaPeminjamanController::class, 'show'])->name('peminjaman.show');
+    Route::get('/peminjaman/{uuid}', [AnggotaPeminjamanController::class, 'show'])->name('peminjaman.show');
 
     // Denda (read-only)
     Route::get('/denda', [AnggotaDendaController::class, 'index'])->name('denda.index');

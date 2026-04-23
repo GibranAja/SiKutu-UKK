@@ -29,7 +29,7 @@ class Pengembalian extends Model
     /**
      * Konstanta status denda.
      */
-    public const STATUS_DENDA = ['LUNAS', 'BELUM_LUNAS', 'TIDAK_ADA'];
+    public const STATUS_DENDA = ['LUNAS', 'BELUM_LUNAS', 'TIDAK_ADA', 'MENUNGGU_KONFIRMASI', 'DITOLAK'];
 
     /**
      * Atribut yang bisa diisi massal.
@@ -42,6 +42,8 @@ class Pengembalian extends Model
         'denda_kondisi',
         'denda_total',
         'status_denda',
+        'metode_pembayaran',
+        'bukti_pembayaran',
         'id_petugas_kembali',
         'catatan_petugas',
     ];

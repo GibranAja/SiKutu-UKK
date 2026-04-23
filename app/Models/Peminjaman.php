@@ -109,7 +109,10 @@ class Peminjaman extends Model
             return 0;
         }
 
-        return Carbon::now()->diffInDays($this->tanggal_harus_kembali);
+        $now = Carbon::now()->startOfDay();
+        $harus = $this->tanggal_harus_kembali->copy()->startOfDay();
+
+        return (int) abs($now->diffInDays($harus));
     }
 
     /**
@@ -117,11 +120,14 @@ class Peminjaman extends Model
      */
     public function hitungHariTerlambatDari(Carbon $tanggalKembali): int
     {
-        if ($tanggalKembali->lte($this->tanggal_harus_kembali)) {
+        $kembali = $tanggalKembali->copy()->startOfDay();
+        $harus = $this->tanggal_harus_kembali->copy()->startOfDay();
+
+        if ($kembali->lte($harus)) {
             return 0;
         }
 
-        return $tanggalKembali->diffInDays($this->tanggal_harus_kembali);
+        return (int) abs($kembali->diffInDays($harus));
     }
 
     /**

@@ -19,7 +19,7 @@ class DendaController extends Controller
             ->paginate(10);
 
         $totalBelumLunas = Pengembalian::whereHas('peminjaman', fn($q) => $q->where('id_anggota', $anggota->id_anggota))
-            ->where('status_denda', 'BELUM_LUNAS')
+            ->whereIn('status_denda', ['BELUM_LUNAS', 'DITOLAK'])
             ->sum('denda_total');
 
         return view('anggota.denda.index', compact('dendas', 'totalBelumLunas'));

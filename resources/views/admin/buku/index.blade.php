@@ -7,19 +7,14 @@
 <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <form action="{{ route('admin.buku.index') }}" method="GET" class="w-full sm:w-auto flex-1 flex flex-col sm:flex-row gap-2">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul, pengarang, kode..." class="input-field w-full sm:max-w-xs">
-        
-        <select name="genre" class="input-field w-full sm:max-w-[150px] bg-white">
-            <option value="">Semua Genre</option>
-            @foreach($genres as $genre)
-                <option value="{{ $genre->id_genre }}" {{ request('genre') == $genre->id_genre ? 'selected' : '' }}>{{ $genre->nama_genre }}</option>
-            @endforeach
-        </select>
 
-        <select name="status" class="input-field w-full sm:max-w-[150px] bg-white">
-            <option value="">Semua Status</option>
-            <option value="TERSEDIA" {{ request('status') == 'TERSEDIA' ? 'selected' : '' }}>Tersedia</option>
-            <option value="TIDAK_TERSEDIA" {{ request('status') == 'TIDAK_TERSEDIA' ? 'selected' : '' }}>Tidak Tersedia</option>
-        </select>
+        <div class="w-full sm:max-w-[150px]">
+            <x-custom-select name="genre" :options="['' => 'Semua Genre'] + $genres->pluck('nama_genre', 'id_genre')->toArray()" selected="{{ request('genre') }}" placeholder="Semua Genre" />
+        </div>
+
+        <div class="w-full sm:max-w-[150px]">
+            <x-custom-select name="status" :options="['' => 'Semua Status', 'TERSEDIA' => 'Tersedia', 'TIDAK_TERSEDIA' => 'Tidak Tersedia']" selected="{{ request('status') }}" placeholder="Semua Status" />
+        </div>
 
         <button type="submit" class="btn-secondary whitespace-nowrap">Filter</button>
         @if(request()->anyFilled(['search', 'genre', 'status']))
@@ -81,13 +76,13 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 text-right space-x-2">
-                        <a href="{{ route('admin.buku.show', $buku->id_buku) }}" class="text-blue-600 hover:text-blue-900 p-1 inline-block transition-transform hover:scale-110" title="Detail">
+                        <a href="{{ route('admin.buku.show', $buku->uuid) }}" class="text-blue-600 hover:text-blue-900 p-1 inline-block transition-transform hover:scale-110" title="Detail">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         </a>
-                        <a href="{{ route('admin.buku.edit', $buku->id_buku) }}" class="text-amber-600 hover:text-amber-900 p-1 inline-block transition-transform hover:scale-110" title="Edit">
+                        <a href="{{ route('admin.buku.edit', $buku->uuid) }}" class="text-amber-600 hover:text-amber-900 p-1 inline-block transition-transform hover:scale-110" title="Edit">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         </a>
-                        <form action="{{ route('admin.buku.destroy', $buku->id_buku) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus buku ini?');">
+                        <form action="{{ route('admin.buku.destroy', $buku->uuid) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus buku ini?');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-900 p-1 transition-transform hover:scale-110" title="Hapus">

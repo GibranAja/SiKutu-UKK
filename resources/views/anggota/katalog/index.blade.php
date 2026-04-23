@@ -14,20 +14,11 @@
         </div>
         
         <div class="w-full md:w-48">
-            <select name="genre" class="w-full px-4 py-2 border border-gray-300 rounded font-montserrat focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors">
-                <option value="">Semua Genre</option>
-                @foreach($genres as $genre)
-                    <option value="{{ $genre->id_genre }}" {{ request('genre') == $genre->id_genre ? 'selected' : '' }}>{{ $genre->nama_genre }}</option>
-                @endforeach
-            </select>
+            <x-custom-select name="genre" :options="['' => 'Semua Genre'] + $genres->pluck('nama_genre', 'id_genre')->toArray()" selected="{{ request('genre') }}" placeholder="Semua Genre" />
         </div>
 
         <div class="w-full md:w-48">
-            <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded font-montserrat focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors">
-                <option value="">Semua Status</option>
-                <option value="TERSEDIA" {{ request('status') == 'TERSEDIA' ? 'selected' : '' }}>Tersedia</option>
-                <option value="TIDAK_TERSEDIA" {{ request('status') == 'TIDAK_TERSEDIA' ? 'selected' : '' }}>Tidak Tersedia</option>
-            </select>
+            <x-custom-select name="status" :options="['' => 'Semua Status', 'TERSEDIA' => 'Tersedia', 'TIDAK_TERSEDIA' => 'Tidak Tersedia']" selected="{{ request('status') }}" placeholder="Semua Status" />
         </div>
 
         <button type="submit" class="btn-primary w-full md:w-auto">Cari</button>
@@ -54,7 +45,7 @@
                 @if($buku->status_buku == 'TERSEDIA' && $buku->kondisi == 'BAIK')
                     <span class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-500 text-white rounded shadow">Tersedia</span>
                 @else
-                    <span class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-red-500 text-white rounded shadow">Kosong</span>
+                    <span class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-red-500 text-white rounded shadow">Tidak Tersedia</span>
                 @endif
             </div>
         </div>

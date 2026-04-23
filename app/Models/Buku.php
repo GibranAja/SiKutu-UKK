@@ -88,7 +88,7 @@ class Buku extends Model
      */
     public function isTersedia(): bool
     {
-        return $this->status_buku === 'TERSEDIA' && $this->stok > 0;
+        return $this->status_buku === 'TERSEDIA' && $this->kondisi === 'BAIK' && $this->stok > 0;
     }
 
     /**

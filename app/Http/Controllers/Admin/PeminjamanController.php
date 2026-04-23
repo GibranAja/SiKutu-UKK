@@ -96,16 +96,16 @@ class PeminjamanController extends Controller
         return redirect()->route('admin.peminjaman.index')->with('success', 'Peminjaman berhasil dicatat.');
     }
 
-    public function show(string $id)
+    public function show(string $uuid)
     {
-        $peminjaman = Peminjaman::with(['anggota', 'buku', 'adminPinjam', 'pengembalian.petugasKembali'])->where('uuid', $id)->firstOrFail();
+        $peminjaman = Peminjaman::with(['anggota', 'buku', 'adminPinjam', 'pengembalian.petugasKembali'])->where('uuid', $uuid)->firstOrFail();
         $pengaturan = PengaturanDenda::getAktif();
         return view('admin.peminjaman.show', compact('peminjaman', 'pengaturan'));
     }
 
-    public function edit(string $id)
+    public function edit(string $uuid)
     {
-        $peminjaman = Peminjaman::where('uuid', $id)->firstOrFail();
+        $peminjaman = Peminjaman::where('uuid', $uuid)->firstOrFail();
         if ($peminjaman->isDikembalikan()) {
             return back()->with('error', 'Peminjaman yang sudah dikembalikan tidak bisa diedit.');
         }
@@ -117,9 +117,9 @@ class PeminjamanController extends Controller
         return view('admin.peminjaman.edit', compact('peminjaman', 'anggotas', 'bukus'));
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $uuid)
     {
-        $peminjaman = Peminjaman::where('uuid', $id)->firstOrFail();
+        $peminjaman = Peminjaman::where('uuid', $uuid)->firstOrFail();
         if ($peminjaman->isDikembalikan()) {
             return back()->with('error', 'Peminjaman yang sudah dikembalikan tidak bisa diedit.');
         }
@@ -137,9 +137,9 @@ class PeminjamanController extends Controller
         return redirect()->route('admin.peminjaman.index')->with('success', 'Peminjaman berhasil diperbarui.');
     }
 
-    public function destroy(string $id)
+    public function destroy(string $uuid)
     {
-        $peminjaman = Peminjaman::with('buku')->where('uuid', $id)->firstOrFail();
+        $peminjaman = Peminjaman::with('buku')->where('uuid', $uuid)->firstOrFail();
         if ($peminjaman->status_peminjaman === 'DIPINJAM') {
             $peminjaman->buku->tambahStok();
         }
@@ -149,5 +149,70 @@ class PeminjamanController extends Controller
         LogAktivitas::catat(Auth::guard('admin')->id(), 'DELETE_PEMINJAMAN', 'peminjaman', "Menghapus peminjaman #{$dataLama['id_peminjaman']}", $dataLama, null);
 
         return redirect()->route('admin.peminjaman.index')->with('success', 'Peminjaman berhasil dihapus.');
+    }
+
+    public function terima(string $uuid)
+    {
+        $peminjaman = Peminjaman::with('buku')->where('uuid', $uuid)->firstOrFail();
+
+        // Cek apakah status adalah MENUNGGU_KONFIRMASI
+        if ($peminjaman->status_peminjaman !== 'MENUNGGU_KONFIRMASI') {
+            return back()->with('error', 'Peminjaman ini tidak dapat diterima.');
+        }
+
+        // Cek apakah buku masih tersedia
+        if (!$peminjaman->buku->isTersedia()) {
+            return back()->with('error', 'Buku tidak tersedia untuk dipinjam.');
+        }
+
+        $dataLama = $peminjaman->toArray();
+
+        // Update status
+        $peminjaman->update([
+            'status_peminjaman' => 'DIPINJAM',
+            'id_admin_pinjam' => Auth::guard('admin')->id(),
+        ]);
+
+        // Kurangi stok buku
+        $peminjaman->buku->kurangiStok();
+
+        LogAktivitas::catat(
+            Auth::guard('admin')->id(),
+            'APPROVE_PEMINJAMAN',
+            'peminjaman',
+            "Menerima peminjaman buku '{$peminjaman->buku->judul_buku}' oleh {$peminjaman->anggota->nama_lengkap}",
+            $dataLama,
+            $peminjaman->fresh()->toArray()
+        );
+
+        return redirect()->route('admin.peminjaman.index')->with('success', 'Peminjaman berhasil diterima.');
+    }
+
+    public function tolak(string $uuid)
+    {
+        $peminjaman = Peminjaman::where('uuid', $uuid)->firstOrFail();
+
+        // Cek apakah status adalah MENUNGGU_KONFIRMASI
+        if ($peminjaman->status_peminjaman !== 'MENUNGGU_KONFIRMASI') {
+            return back()->with('error', 'Peminjaman ini tidak dapat ditolak.');
+        }
+
+        $dataLama = $peminjaman->toArray();
+
+        // Update status ke DITOLAK
+        $peminjaman->update([
+            'status_peminjaman' => 'DITOLAK',
+        ]);
+
+        LogAktivitas::catat(
+            Auth::guard('admin')->id(),
+            'REJECT_PEMINJAMAN',
+            'peminjaman',
+            "Menolak peminjaman buku '{$peminjaman->buku->judul_buku}' oleh {$peminjaman->anggota->nama_lengkap}",
+            $dataLama,
+            $peminjaman->fresh()->toArray()
+        );
+
+        return redirect()->route('admin.peminjaman.index')->with('success', 'Peminjaman berhasil ditolak.');
     }
 }

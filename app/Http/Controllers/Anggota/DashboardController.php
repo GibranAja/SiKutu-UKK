@@ -28,7 +28,7 @@ class DashboardController extends Controller
 
         // Denda belum lunas
         $dendaBelumLunas = Pengembalian::whereHas('peminjaman', fn($q) => $q->where('id_anggota', $anggota->id_anggota))
-            ->where('status_denda', 'BELUM_LUNAS')
+            ->whereIn('status_denda', ['BELUM_LUNAS', 'DITOLAK'])
             ->get();
 
         $totalDendaBelumLunas = $dendaBelumLunas->sum('denda_total');

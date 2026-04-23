@@ -47,32 +47,36 @@
             <div class="grid grid-cols-3 gap-4">
                 <div>
                     <label for="tingkat" class="block text-sm font-medium text-gray-700 mb-1 font-oswald">Kelas</label>
-                    <select id="tingkat" name="tingkat" x-model="tingkat" required class="input-field bg-white">
-                        <option value="">Pilih</option>
-                        <option value="10">10</option>
-                        <option value="11">11</option>
-                        <option value="12">12</option>
-                    </select>
+                    <x-custom-select name="tingkat" :options="['' => 'Pilih', '10' => '10', '11' => '11', '12' => '12']" selected="{{ old('tingkat') }}" placeholder="Pilih" onchange="tingkat = value" />
                 </div>
                 <div>
                     <label for="jurusan_base" class="block text-sm font-medium text-gray-700 mb-1 font-oswald">Jurusan</label>
-                    <select id="jurusan_base" name="jurusan_base" x-model="jurusan" required class="input-field bg-white" @change="rombel = ''">
-                        <option value="">Pilih</option>
-                        <option value="PPLG">PPLG</option>
-                        <option value="BCF">BCF</option>
-                        <option value="ANM">ANM</option>
-                        <option value="TO">TO</option>
-                        <option value="TPFL">TPFL</option>
-                    </select>
+                    <x-custom-select name="jurusan_base" :options="['' => 'Pilih', 'PPLG' => 'PPLG', 'BCF' => 'BCF', 'ANM' => 'ANM', 'TO' => 'TO', 'TPFL' => 'TPFL']" selected="{{ old('jurusan_base') }}" placeholder="Pilih" onchange="jurusan = value; rombel = ''" />
                 </div>
                 <div>
                     <label for="rombel" class="block text-sm font-medium text-gray-700 mb-1 font-oswald">Rombel</label>
-                    <select id="rombel" name="rombel" x-model="rombel" required class="input-field bg-white" :disabled="!jurusan">
-                        <option value="">Pilih</option>
-                        <template x-for="i in maxRombel" :key="i">
-                            <option :value="i" x-text="i" :selected="rombel == i"></option>
-                        </template>
-                    </select>
+                    <div class="relative z-[98] w-full" x-data="{ open: false }">
+                        <button type="button" @click="if(jurusan) open = !open" @click.away="open = false" 
+                                class="input-field w-full bg-white flex justify-between items-center text-left"
+                                :class="{'opacity-50 cursor-not-allowed': !jurusan, 'ring-2 ring-blue-500 border-blue-500': open}"
+                                :disabled="!jurusan">
+                            <span x-text="rombel ? rombel : 'Pilih'" class="truncate"></span>
+                            <svg class="w-4 h-4 ml-2 text-gray-500 flex-shrink-0 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div x-show="open" class="absolute mt-1 w-full bg-white border border-gray-200 rounded-md shadow-xl z-[9999] py-1 max-h-60 overflow-y-auto" style="display: none;" x-transition>
+                            <button type="button" @click="rombel = ''; open = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                Pilih
+                            </button>
+                            <template x-for="i in maxRombel" :key="i">
+                                <button type="button" @click="rombel = i; open = false" 
+                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors" 
+                                        :class="{ 'bg-blue-50 font-bold': rombel == i }">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+                        <input type="hidden" id="rombel" name="rombel" :value="rombel">
+                    </div>
                 </div>
             </div>
             @error('tingkat') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror

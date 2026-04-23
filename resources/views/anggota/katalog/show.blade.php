@@ -113,7 +113,7 @@
                         </button>
                     @else
                         <button disabled class="px-6 py-3 bg-gray-300 text-gray-500 font-oswald font-medium rounded shadow-none cursor-not-allowed w-full sm:w-auto text-center">
-                            Stok Habis
+                            Tidak Tersedia
                         </button>
                     @endif
                 </div>
