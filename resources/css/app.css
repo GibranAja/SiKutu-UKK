@@ -12,6 +12,9 @@
 }
 
 @layer base {
+  [x-cloak] {
+    display: none !important;
+  }
   body {
     @apply font-montserrat text-gray-800 bg-gray-50;
   }

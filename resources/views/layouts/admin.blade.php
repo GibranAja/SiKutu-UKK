@@ -60,13 +60,10 @@
                     <p class="text-sm font-medium truncate">{{ Auth::guard('admin')->user()->nama_lengkap ?? 'Admin' }}</p>
                 </div>
             </a>
-            <form action="{{ route('logout') }}" method="POST" class="mt-4">
-                @csrf
-                <button type="submit" class="w-full text-left flex items-center text-red-600 hover:text-red-700 transition-colors duration-300 ease-in-out text-sm font-medium">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    Logout
-                </button>
-            </form>
+            <button @click="$dispatch('open-logout-modal')" type="button" class="w-full text-left flex items-center text-red-600 hover:text-red-700 transition-colors duration-300 ease-in-out text-sm font-medium mt-4">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </button>
         </div>
     </aside>
 
@@ -88,6 +85,62 @@
             @yield('content')
         </div>
     </main>
+
+    <!-- Logout Confirmation Modal -->
+    <div x-data="{ showLogoutModal: false }" 
+         @open-logout-modal.window="showLogoutModal = true"
+         x-show="showLogoutModal"
+         x-cloak
+         class="fixed inset-0 z-[99] flex items-center justify-center">
+        
+        {{-- Backdrop --}}
+        <div x-show="showLogoutModal"
+             x-transition:enter="transition ease-in-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in-out duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="showLogoutModal = false"
+             class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+        {{-- Modal Panel --}}
+        <div x-show="showLogoutModal"
+             x-transition:enter="transition ease-in-out duration-300"
+             x-transition:enter-start="opacity-0 scale-90 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in-out duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-90 translate-y-4"
+             class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 text-center">
+            
+            {{-- Icon --}}
+            <div class="mx-auto flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+            </div>
+
+            {{-- Text --}}
+            <h3 class="font-oswald text-xl font-bold text-gray-800 mb-2">Konfirmasi Logout</h3>
+            <p class="text-gray-500 text-sm mb-6">Apakah Anda yakin ingin keluar dari sistem? Sesi Anda akan berakhir.</p>
+
+            {{-- Actions --}}
+            <div class="flex items-center justify-center gap-3">
+                <button @click="showLogoutModal = false" type="button"
+                        class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-200">
+                    Batal
+                </button>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 shadow-lg shadow-red-200 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-400">
+                        Ya, Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Global Toaster -->
     <div class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2 pointer-events-none">
@@ -117,5 +170,6 @@
             </div>
         @endif
     </div>
+
 </body>
 </html>
