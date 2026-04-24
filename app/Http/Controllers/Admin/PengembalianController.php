@@ -32,7 +32,7 @@ class PengembalianController extends Controller
                 $query->where('status_denda', $request->input('status_denda'));
             }
         } else {
-            $query->where('denda_total', 0);
+            // Menampilkan semua riwayat (baik denda maupun tidak) sesuai permintaan user
         }
 
         $pengembalians = $query->orderBy('created_at', 'desc')->paginate(15);

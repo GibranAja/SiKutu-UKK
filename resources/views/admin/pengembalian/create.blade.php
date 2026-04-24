@@ -13,18 +13,67 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-[fadeIn_0.3s_ease-in-out]">
     <div class="lg:col-span-1 space-y-6">
-        <div class="card p-4">
-            <h3 class="font-oswald text-base font-medium text-gray-800 mb-3 border-b pb-2">Pilih Peminjaman</h3>
-            <form action="{{ route('admin.pengembalian.create') }}" method="GET" class="mb-4">
-                @php
-                    $optionsPeminjaman = ['' => 'Pilih Transaksi Aktif...'];
-                    foreach($peminjamanAktif as $p) {
-                        $optionsPeminjaman[$p->id_peminjaman] = $p->anggota->nama_lengkap . ' - ' . Str::limit($p->buku->judul_buku, 20);
-                    }
-                @endphp
-                <x-custom-select name="peminjaman" :options="$optionsPeminjaman" selected="{{ request('peminjaman') }}" placeholder="Pilih Transaksi Aktif..." onchange="$el.closest('form').submit()" id="form-peminjaman" />
-            </form>
-            <p class="text-xs text-gray-500">Pilih dari daftar transaksi yang masih berstatus DIPINJAM untuk memproses pengembalian.</p>
+        <div class="card p-4" x-data="{ 
+            search: '', 
+            items: {{ $peminjamanAktif->map(fn($p) => [
+                'id' => $p->id_peminjaman,
+                'nama' => $p->anggota->nama_lengkap,
+                'nis' => $p->anggota->nis,
+                'buku' => $p->buku->judul_buku,
+                'url' => route('admin.pengembalian.create', ['peminjaman' => $p->id_peminjaman])
+            ])->toJson() }},
+            showSuggestions: false,
+            get filteredItems() {
+                if (this.search.length < 2) return [];
+                return this.items.filter(i => 
+                    i.nama.toLowerCase().includes(this.search.toLowerCase()) || 
+                    i.nis.toLowerCase().includes(this.search.toLowerCase()) || 
+                    i.buku.toLowerCase().includes(this.search.toLowerCase())
+                ).slice(0, 10);
+            }
+        }">
+            <h3 class="font-oswald text-base font-medium text-gray-800 mb-3 border-b pb-2">Cari Peminjaman Aktif</h3>
+            <div class="relative">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        x-model="search" 
+                        @input="showSuggestions = true"
+                        @click.away="showSuggestions = false"
+                        @focus="showSuggestions = true"
+                        placeholder="Ketik nama, NISN, atau judul buku..." 
+                        class="input-field pl-10"
+                    >
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                </div>
+
+                <!-- Suggestions Dropdown -->
+                <div 
+                    x-show="showSuggestions && filteredItems.length > 0" 
+                    class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-64 overflow-y-auto"
+                    x-transition
+                >
+                    <template x-for="item in filteredItems" :key="item.id">
+                        <a :href="item.url" class="block px-4 py-3 hover:bg-blue-50 border-b border-gray-50 last:border-0 transition-colors">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="text-sm font-bold text-gray-800" x-text="item.nama"></div>
+                                    <div class="text-xs text-gray-500" x-text="'NISN: ' + item.nis"></div>
+                                    <div class="text-xs text-blue-600 font-medium mt-1" x-text="item.buku"></div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                        </a>
+                    </template>
+                </div>
+
+                <div x-show="search.length >= 2 && filteredItems.length === 0" class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-4 text-center text-sm text-gray-500">
+                    Tidak ditemukan hasil untuk "<span x-text="search" class="font-medium"></span>"
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-3 italic">* Masukkan minimal 2 karakter untuk mulai mencari transaksi yang masih DIPINJAM.</p>
         </div>
 
         @if($peminjaman)

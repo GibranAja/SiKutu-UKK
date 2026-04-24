@@ -47,10 +47,8 @@
                     <th class="px-6 py-4">Peminjam</th>
                     <th class="px-6 py-4">Buku</th>
                     <th class="px-6 py-4">Tgl Kembali</th>
-                    @if($tab === 'denda')
                     <th class="px-6 py-4">Denda</th>
                     <th class="px-6 py-4">Pembayaran</th>
-                    @endif
                     <th class="px-6 py-4 text-right">Aksi</th>
                 </tr>
             </thead>
@@ -68,8 +66,8 @@
                     <td class="px-6 py-4">
                         {{ \Carbon\Carbon::parse($kembali->tanggal_kembali)->format('d/m/Y') }}
                     </td>
-                    @if($tab === 'denda')
                     <td class="px-6 py-4">
+                        @if($kembali->denda_total > 0)
                         <div class="font-bold text-red-600">Rp {{ number_format($kembali->denda_total, 0, ',', '.') }}</div>
                         <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full mt-1 inline-block
                             @if($kembali->status_denda == 'LUNAS') bg-emerald-100 text-emerald-800 
@@ -78,9 +76,12 @@
                             @else bg-gray-100 text-gray-800 @endif">
                             {{ str_replace('_', ' ', $kembali->status_denda) }}
                         </span>
+                        @else
+                        <span class="text-emerald-600 font-medium">Tidak Ada Denda</span>
+                        @endif
                     </td>
                     <td class="px-6 py-4">
-                        @if($kembali->metode_pembayaran)
+                        @if($kembali->denda_total > 0 && $kembali->metode_pembayaran)
                             <div class="text-xs font-semibold">{{ $kembali->metode_pembayaran }}</div>
                             @if($kembali->metode_pembayaran === 'TRANSFER' && $kembali->bukti_pembayaran)
                                 <a href="{{ Storage::url($kembali->bukti_pembayaran) }}" target="_blank" class="text-blue-600 hover:underline text-xs flex items-center mt-1">
@@ -92,9 +93,8 @@
                             <span class="text-gray-400 text-xs">-</span>
                         @endif
                     </td>
-                    @endif
                     <td class="px-6 py-4 text-right space-x-2">
-                        @if($tab === 'denda' && $kembali->status_denda == 'MENUNGGU_KONFIRMASI')
+                        @if($kembali->status_denda == 'MENUNGGU_KONFIRMASI')
                         <form action="{{ route('admin.pengembalian.terima-pembayaran', $kembali->uuid) }}" method="POST" class="inline-block" onsubmit="return confirm('Terima pembayaran denda ini?');">
                             @csrf
                             @method('PATCH')
