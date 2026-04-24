@@ -28,7 +28,7 @@ Dokumentasi Lengkap Aplikasi Manajemen Perpustakaan Digital
 
 ## 1. DESKRIPSI PROYEK
 
-SIKUTU (Sistem Katalog Terpadu Universitas) adalah aplikasi web modern untuk mengelola perpustakaan digital dengan kemampuan manajemen buku, anggota, peminjaman, pengembalian, dan sistem denda otomatis.
+SIKUTU adalah aplikasi web modern untuk mengelola perpustakaan digital dengan kemampuan manajemen buku, anggota, peminjaman, pengembalian, dan sistem denda otomatis.
 
 ### 1.1 Tujuan Aplikasi
 
@@ -66,7 +66,6 @@ Aplikasi ini dirancang untuk:
 #### Manajemen Genre
 - Tambah, edit, dan hapus kategori genre buku
 - Asosiasikan multiple genre ke satu buku
-- Import genre dari file JSON
 
 #### Manajemen Anggota
 - Tambah anggota perpustakaan baru
@@ -83,7 +82,6 @@ Aplikasi ini dirancang untuk:
 - Kelola durasi peminjaman
 - Catat catatan peminjaman
 - Tracking tanggal pengembalian
-- Export data peminjaman
 
 #### Manajemen Pengembalian
 - Lihat semua pengembalian buku
@@ -91,20 +89,15 @@ Aplikasi ini dirancang untuk:
 - Hitung dan kelola denda keterlambatan otomatis
 - Terima pembayaran denda
 - Tolak pembayaran denda
-- Generate laporan pengembalian
 
 #### Pengaturan Denda
 - Tentukan tarif denda per hari
-- Kelola rumus perhitungan denda
 - Update pengaturan denda kapan saja
-- Lihat history perubahan pengaturan
 
 #### Log Aktivitas
 - Pencatatan otomatis semua aktivitas
 - Filter berdasarkan tipe aktivitas
 - Filter berdasarkan user yang melakukan
-- Lihat detail aktivitas lengkap
-- Export log untuk audit
 
 #### Recycle Bin
 - Restore data yang telah dihapus
@@ -172,8 +165,7 @@ Aplikasi ini dirancang untuk:
 
 - **PHP 8.3+**: Bahasa pemrograman server-side
 - **Laravel 13.0**: Web framework PHP modern
-- **MySQL/MariaDB**: Database relasional
-- **Laravel Tinker**: REPL untuk debugging
+- **MySQL**: Database relasional
 - **Vinkla Hashids**: Library untuk generate hash ID unik
 
 ### 3.2 Frontend
@@ -182,7 +174,6 @@ Aplikasi ini dirancang untuk:
 - **Tailwind CSS 4.2**: CSS framework utility-first
 - **Alpine.js 3.15**: Lightweight JavaScript framework
 - **Vite**: Build tool dan module bundler
-- **Axios**: HTTP client untuk AJAX requests
 - **PostCSS**: CSS transformation tool
 - **Autoprefixer**: CSS vendor prefixing
 
@@ -191,12 +182,9 @@ Aplikasi ini dirancang untuk:
 - **Composer**: PHP package manager
 - **npm**: JavaScript package manager
 - **Pest**: Testing framework modern untuk PHP
-- **PHPUnit**: Unit testing framework
 - **Laravel Pail**: Log monitoring
 - **Laravel Pint**: PHP code style formatter
 - **Mockery**: Mocking library untuk unit tests
-- **Concurrently**: Run multiple commands simultaneously
-- **FakerPHP**: Generate fake data untuk testing
 
 ### 3.4 Utilities
 
@@ -1476,7 +1464,7 @@ class Admin extends Model {
     - nomor_hp: string (nullable)
     - timestamps
     - soft deletes
-    
+
     Relationships:
     - peminjaman (HasMany): Peminjaman yang diterima admin
     - logAktivitas (HasMany): Log aktivitas yang dibuat admin
@@ -1509,7 +1497,7 @@ class AnggotaPerpustakaan extends Model {
     - foto: string (nullable)
     - timestamps
     - soft deletes
-    
+
     Relationships:
     - peminjaman (HasMany): Semua peminjaman anggota
     - pengembalian (HasMany): Semua pengembalian anggota
@@ -1544,7 +1532,7 @@ class Buku extends Model {
     - status_buku: enum (TERSEDIA, DIPINJAM, TIDAK_TERSEDIA)
     - timestamps
     - soft deletes
-    
+
     Relationships:
     - genres (BelongsToMany): Genre buku
     - peminjaman (HasMany): Semua peminjaman buku
@@ -1569,7 +1557,7 @@ class Genre extends Model {
     - nama_genre: string
     - deskripsi: text (nullable)
     - timestamps
-    
+
     Relationships:
     - buku (BelongsToMany): Semua buku dalam genre
 }
@@ -1596,7 +1584,7 @@ class Peminjaman extends Model {
     - status_peminjaman: enum (DIPINJAM, DIKEMBALIKAN)
     - catatan_peminjaman: text (nullable)
     - timestamps
-    
+
     Relationships:
     - anggota (BelongsTo): Anggota yang meminjam
     - buku (BelongsTo): Buku yang dipinjam
@@ -1628,7 +1616,7 @@ class Pengembalian extends Model {
     - status_denda: enum (BELUM_DIBAYAR, MENUNGGU_KONFIRMASI, DIBAYAR)
     - catatan_pengembalian: text (nullable)
     - timestamps
-    
+
     Relationships:
     - peminjaman (BelongsTo): Record peminjaman terkait
     - anggota (BelongsTo): Anggota yang mengembalikan
@@ -1681,7 +1669,7 @@ class LogAktivitas extends Model {
     - ip_address: string (nullable)
     - user_agent: text (nullable)
     - timestamps
-    
+
     Relationships:
     - user (BelongsTo): Admin atau Anggota yang melakukan
 }
